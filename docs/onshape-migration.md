@@ -2,13 +2,16 @@
 
 Migrate `antweight_reference_platform/spinbot_ant.scad` from OpenSCAD into Onshape as a true parametric model.
 
-> **Status (2026-05-26):** v1 in progress.
-> - Variable Studio populated (33 base + 1 derived).
+> **Status (2026-05-26):** v1 functionally complete for the detachable-weapon build.
+> - Variable Studio populated (33 base + 5 derived).
 > - `lid` Part Studio **BUILT** (11 features, volume within 0.4% of SCAD prediction).
-> - `shell_no_weapon` core — next.
-> - Everything else — planned, untouched.
+> - `shell_no_weapon` Part Studio **BUILT** (23 features incl. battery wall; volume within 0.03% of summed SCAD predictions).
+> - `weapon` Part Studio **BUILT** (6 features). Caveat: 2 disconnected bodies in v1, top connecting bridge missing — see bead `hamachi-6q9`.
+> - `weapon_pin` Part Studio **BUILT** (2 features).
+> - `shell_with_weapon` — deferred (`hamachi-v5c`); detachable-weapon build via weapon+weapon_pin is the v1 path.
+> - Arduino shelf in shell — deferred (`hamachi-xy5`); SCAD's compound rotation needs FeatureScript or 3-point plane workaround.
 >
-> The "Lessons learned (v1)" section near the bottom captures what didn't survive contact with the CAD kernel.
+> The "Lessons learned (v1)" section near the bottom captures what didn't survive contact with the CAD kernel. Open handoff items in `bd list` filtered by "hamachi-".
 
 ## Why migrate
 
@@ -50,10 +53,10 @@ Single Onshape document named `hamachi` (created 2026-05-25; `documentId = 3662b
 |---|---|---|---|---|
 | `variables` | Variable Studio | **populated** | `8ad42fc0569446006c975dba` | All shared parameters (see [variable mapping](#variable-mapping)) |
 | `lid` | Part Studio | **built v1** | `4184aeece3d6787270371115` | Top lid with LED/power holes and motor clearance cut |
-| `shell_no_weapon` | Part Studio | planned | — | Main shell with weapon-mount hole only |
-| `shell_with_weapon` | Part Studio | planned | — | Main shell with integrated weapon |
-| `weapon` | Part Studio | planned | — | Detachable weapon |
-| `weapon_pin` | Part Studio | planned | — | Press-fit pin for detachable weapon |
+| `shell_no_weapon` | Part Studio | **built v1** | `9e9326c01379985fe1982ee6` | Main shell with weapon-mount hole. Includes battery wall; Arduino shelf deferred (`hamachi-xy5`) |
+| `weapon` | Part Studio | **built v1** | `109b30fd7fdba9ecc8543a6e` | Detachable weapon. 2 disconnected bodies in v1; top bridge fix in `hamachi-6q9` |
+| `weapon_pin` | Part Studio | **built v1** | `d8b341a8f7fcb9bbee7d33a3` | Press-fit pin for detachable weapon |
+| `shell_with_weapon` | Part Studio | deferred | — | Integrated-weapon variant. Tracked in `hamachi-v5c` |
 | `fit_check` | Assembly | planned | — | Holds shell + lid + placeholder electronics for visual verification (low priority) |
 | `Part Studio 1` | Part Studio | empty default | `064c70496e243190d7179534` | To delete (bead `hamachi-8jo`) |
 
@@ -255,11 +258,15 @@ Bounding box and mass should still agree within 1% (the holes are tiny relative 
 ## Onshape document IDs (for agent sessions)
 
 ```
-documentId  = 3662b787ba73917e77c5a543
-workspaceId = 64e642b76ea639b57af58924
+documentId       = 3662b787ba73917e77c5a543
+workspaceId      = 64e642b76ea639b57af58924
 
-variables   (Variable Studio) = 8ad42fc0569446006c975dba
-lid         (Part Studio)     = 4184aeece3d6787270371115
+variables        (Variable Studio) = 8ad42fc0569446006c975dba
+lid              (Part Studio)     = 4184aeece3d6787270371115
+shell_no_weapon  (Part Studio)     = 9e9326c01379985fe1982ee6
+weapon           (Part Studio)     = 109b30fd7fdba9ecc8543a6e
+weapon_pin       (Part Studio)     = d8b341a8f7fcb9bbee7d33a3
+Part Studio 1    (empty default)   = 064c70496e243190d7179534    # to delete (hamachi-8jo)
 ```
 
 These won't change unless the doc is recreated. Drop them straight into tool args to skip a `get_document` / `get_elements` lookup at the start of each session.
