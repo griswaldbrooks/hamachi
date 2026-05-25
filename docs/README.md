@@ -10,6 +10,7 @@ the Arduino-based melty-brain combat robot controller. Named "hamachi" because t
   - [BOM](./competition-2026-06-06-bom.md) — reproducible parts list with vendor part numbers
   - [Build Log](./competition-2026-06-06-build-log.md) — running log of prints, assembly, tuning, results
 - [Architectural Decision Records](./decisions/) — durable decisions and their rationale
+- [Onshape migration plan](./onshape-migration.md) — migrating the antweight reference SCAD to a parametric Onshape model
 
 ## Conventions
 
