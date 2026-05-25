@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "hamachi",
+  "project_id": "765e786b-36af-442e-903f-e7e2475a1764"
+}
