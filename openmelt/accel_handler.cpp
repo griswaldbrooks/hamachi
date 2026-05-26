@@ -12,7 +12,7 @@
 
 //Sparkfun's LIS311 library is used (also works for Adafruit part)
 
-#include <arduino.h>
+#include <Arduino.h>
 #include "melty_config.h"
 #include "accel_handler.h"
 #include <Wire.h>

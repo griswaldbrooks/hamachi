@@ -11,7 +11,7 @@
 #ifdef ENABLE_EEPROM_STORAGE
 
 #include <EEPROM.h>
-#include <arduino.h>
+#include <Arduino.h>
 #include "config_storage.h"
 
 #define EEPROM_WRITTEN_SENTINEL1_VALUE EEPROM_WRITTEN_SENTINEL_VALUE

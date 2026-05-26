@@ -1,7 +1,7 @@
 //this module handles calculation and timing loop for translational drift
 //direction of rotation assumed to be CLOCKWISE (but should work counter-clockwise)
 
-#include "arduino.h"
+#include "Arduino.h"
 #include "melty_config.h"
 #include "motor_driver.h"
 #include "rc_handler.h"

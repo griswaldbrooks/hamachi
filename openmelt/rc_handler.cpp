@@ -1,7 +1,7 @@
 //This module handles the RC interface (interrupt driven)
 
 #include "rc_handler.h"
-#include "arduino.h"
+#include "Arduino.h"
 #include "melty_config.h"
 
 #define RC_DATA_UNLOCKED 0

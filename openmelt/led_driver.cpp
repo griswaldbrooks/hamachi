@@ -1,4 +1,4 @@
-#include "arduino.h"
+#include "Arduino.h"
 #include "melty_config.h"
 
 void init_led(void) {

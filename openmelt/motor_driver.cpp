@@ -1,6 +1,6 @@
 //this module handles interfacing to the motors
 
-#include "arduino.h"
+#include "Arduino.h"
 #include "melty_config.h"
 #include "motor_driver.h"
 
