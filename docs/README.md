@@ -1,3 +1,10 @@
+---
+title: Hamachi
+slug: /
+sidebar_label: Home
+sidebar_position: 0
+---
+
 # hamachi docs
 
 Project documentation for `hamachi` — a hard fork of [nothinglabs/openmelt2](https://github.com/nothinglabs/openmelt2),
@@ -21,5 +28,5 @@ the Arduino-based melty-brain combat robot controller. Named "hamachi" because t
 ## Upstream attribution
 
 Original work © Rich Olson / [nothinglabs.com](http://www.nothinglabs.com), licensed CC BY-NC-SA 4.0. Attribution
-and share-alike obligations carry forward into this fork. See [`readme.md`](../readme.md) at the repo root for the
+and share-alike obligations carry forward into this fork. See [the repo-root readme](https://github.com/griswaldbrooks/hamachi/blob/main/readme.md) for the
 upstream README (preserved during fork).

@@ -74,7 +74,7 @@ Direct from [fingertechrobotics.com](https://www.fingertechrobotics.com/).
 | Item | Notes |
 |---|---|
 | Foam wheels | In-house technique (prior-build validated). Builder makes own rather than buying FingerTech foam wheels. |
-| Shell (`shell_no_weapon.stl`), lid (`lid.stl`), weapon (`weapon.stl`), weapon pin (`weapon_pin.stl`) | Bambu X1C. **First pass: PLA fit-check** (in progress 5/24 evening). **Final pass: PPA-CF**, after drying filament 8+ hrs @ 80°C. See [ADR-0004](./decisions/0004-use-ppa-cf-print-material.md). Source STLs in [`antweight_reference_platform/`](../antweight_reference_platform/). Print no-weapon shell first; weapon attaches via detachable pin. |
+| Shell (`shell_no_weapon.stl`), lid (`lid.stl`), weapon (`weapon.stl`), weapon pin (`weapon_pin.stl`) | Bambu X1C. **First pass: PLA fit-check** (in progress 5/24 evening). **Final pass: PPA-CF**, after drying filament 8+ hrs @ 80°C. See [ADR-0004](./decisions/0004-use-ppa-cf-print-material.md). Source STLs in [`antweight_reference_platform/`](https://github.com/griswaldbrooks/hamachi/tree/main/antweight_reference_platform). Print no-weapon shell first; weapon attaches via detachable pin. |
 
 ## Cost summary
 
