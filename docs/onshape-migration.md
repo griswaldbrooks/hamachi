@@ -2,18 +2,18 @@
 
 Migrate `antweight_reference_platform/spinbot_ant.scad` from OpenSCAD into Onshape as a true parametric model.
 
-> **Status (2026-05-26, v2 polish session):** v1 functionally complete + most v2 polish landed. 11 beads closed across two days; `shell_with_weapon` and 3 deferred-or-blocked items remain.
+> **Status (2026-05-26, v5c session):** v1 functionally complete + most v2 polish landed + shell_with_weapon BUILT (with arduinoShelf). 13 beads closed across three days; 3 deferred-or-blocked items remain.
 > - Variable Studio populated (34 base + 5 derived — added `#weaponBottomVerticalExtension`, `#weaponTopVerticalExtension`, `#weaponSlotExtraWidth`, `#batteryWallZipTieGap`).
 > - `lid` Part Studio **BUILT** (11 features). v2 polish landed: all 6 lid screw hole positions are now fully parametric (`hamachi-9qx`).
 > - `shell_no_weapon` Part Studio **BUILT** (25 features). v2 polish landed: motor wall parametric (`hamachi-ri1`), 3mm zip-tie gap below battery wall (`hamachi-q6l`), parametric lid tap positions (`hamachi-p4k`), Arduino shelf via FeatureScript custom feature (`hamachi-xy5`).
 > - `weapon` Part Studio **BUILT** (8 features). v2 polish landed: structural top bridge (`hamachi-6q9`), `weaponSlotExtraWidth=1mm` kerf widening (`hamachi-tff`). Onshape STL now matches upstream STL volume to within 0.11%. Z offset deferred (`hamachi-kaj`).
 > - `weapon_pin` Part Studio **BUILT** (2 features).
-> - `shell_with_weapon` — still deferred (`hamachi-v5c`); the next big lift.
+> - `shell_with_weapon` Part Studio **BUILT v1** (25 features, `hamachi-v5c` closed). Option A replay: copied shell_no_weapon's tree minus the weapon-mount-hole, added a parametric weapon bar slab at the front, then re-implemented the arduinoShelf as a new FS feature (`hamachi-uqc` closed; FS source archived to `docs/fs/arduino-shelf.fs`). **Volume parity vs SCAD shell_with_weapon.stl: +0.09%** (+115 mm³ — tessellation noise). Bonus: 6 lid tap holes cut (vs shell_no_weapon's 4) thanks to dropping the DISTANCE-MINIMUM positional snap on perimeter taps.
 > - Lid chord-cut decision — open (`hamachi-5fc`); needs design call on whether to match SCAD's brutal cube cut or keep the structural rim crescent.
 > - `Part Studio 1` cleanup — blocked on web UI (`hamachi-8jo`); MCP doesn't expose element-deletion.
 > - LED hole resize — waits on PLA fit-check (`hamachi-yac`).
 >
-> The "Lessons learned" section near the bottom captures every gotcha + workaround from both sessions. Open handoff items in `bd list` filtered by "hamachi-".
+> The "Lessons learned" section near the bottom captures every gotcha + workaround from all sessions. Open handoff items in `bd list` filtered by "hamachi-".
 
 ## Why migrate
 
@@ -58,7 +58,7 @@ Single Onshape document named `hamachi` (created 2026-05-25; `documentId = 3662b
 | `shell_no_weapon` | Part Studio | **built v1** | `9e9326c01379985fe1982ee6` | Main shell with weapon-mount hole. Includes battery wall; Arduino shelf deferred (`hamachi-xy5`) |
 | `weapon` | Part Studio | **built v1** | `109b30fd7fdba9ecc8543a6e` | Detachable weapon. 2 disconnected bodies in v1; top bridge fix in `hamachi-6q9` |
 | `weapon_pin` | Part Studio | **built v1** | `d8b341a8f7fcb9bbee7d33a3` | Press-fit pin for detachable weapon |
-| `shell_with_weapon` | Part Studio | deferred | — | Integrated-weapon variant. Tracked in `hamachi-v5c` |
+| `shell_with_weapon` | Part Studio | **built v1** | `a28ec3540e926aba920d88b6` | Integrated-weapon variant. 24 features replayed from shell_no_weapon (minus weapon mount) + bar ADD (`hamachi-v5c` closed) |
 | `fit_check` | Assembly | planned | — | Holds shell + lid + placeholder electronics for visual verification (low priority) |
 | `Part Studio 1` | Part Studio | empty default | `064c70496e243190d7179534` | To delete (bead `hamachi-8jo`) |
 
@@ -148,15 +148,23 @@ top of shell* assume `list_entities` has been used to get the relevant face dete
 9. **Arduino shelf** — at SCAD's hardcoded `[46,19,15]` with `[-21,0,175]` rotation. This is the one feature where the SCAD geometry is unapologetically hardcoded; the Onshape version should parameterize the shelf angle (`#mcuShelfAngle = 21°`), position, and dimensions explicitly in the Variable Studio. **Out of scope for v1** — replicate SCAD's hardcoded values literally first; parameterize after parity.
 10. **Battery wall** — same story: SCAD hardcodes `translate([-33,58,floorThickness + 3]) rotate([90,0,0]) cube([66, botHeight - 8, 3])`. Replicate literally for v1, parameterize later if needed.
 
-### `shell_with_weapon`
+### `shell_with_weapon` (BUILT v1 — 25 features, `hamachi-v5c` + `hamachi-uqc` closed 2026-05-26)
 
-Derived from `shell_no_weapon` minus the weapon mount hole, plus the weapon body fused as a single solid.
-Two options:
+Option A taken: replayed 21/23 of `shell_no_weapon`'s features (skipped `shell_weapon_mount_xs` + `shell_weapon_mount_cut` — the whole point of this Part Studio is to leave the shell wall intact at the front), then ADDed the integrated weapon bar.
 
-- **Option A:** Copy the `shell_no_weapon` feature tree, delete the weapon-mount-hole REMOVE, and add the weapon as an ADD extrude positioned and clipped per the SCAD `weapon()` module.
-- **Option B:** Reference `shell_no_weapon` via a Derived feature, then suppress/unsuppress features. This is cleaner but couples the two Part Studios — changes to the base shell propagate.
+The 24 features in order:
+1–22. Same as `shell_no_weapon` features 1–19 + 22–24 (i.e. shell base, hollow, wheel well, motor wall + bushing relief, motor mount, motor cut neg/pos Y, zip-tie holes, lid tap holes, battery wall + zip-tie gap). Skips `shell_no_weapon`'s features 20–21 (weapon mount cylinder cut).
+23. `shell_weapon_bar_profile` sketch on Top plane: 40 × 19 mm rectangle, X centered at 0, Y spans `[-76.5, -57.5]` (centered at Y=-67, which is `-(#botDiameter/2) + #weaponInset`). Constraints: 4 COINCIDENT corner closures + 4 HORIZONTAL/VERTICAL edges + 2 DISTANCE-MINIMUM for `#weaponWidth` and `#weaponThickness`. Position is from seed (not parametric — Y=-67 hardcoded).
+24. `shell_weapon_bar` extrude ADD, `variableDepth=botHeight` (33mm) → Z=[0, 33]. The bar's inside portion (Y ∈ [-69, -57.5] and inside the outer cylinder) fuses with the shell; the protruding portion (Y ∈ [-76.5, -69]) is new material sticking out the front. With `weaponPartOfBody=true` (SCAD's flag), all extensions and slot kerf are zero — the bar exactly matches the shell-height + shell-thickness extents.
+25. `shell_arduino_shelf` arduinoShelf FS custom feature (re-built fresh — see `docs/fs/arduino-shelf.fs`). Same geometry as `shell_no_weapon`'s arduinoShelf (face origins match exactly: J2S(36.0, 19.2, 16.9), J6S(32.9, -16.2, 3.2)) but in a NEW Feature Studio element (`661e2d122314a6cc0e1c2311`) because the MCP doesn't expose cross-element FS reference.
 
-**Recommend Option A** for v1 to keep the Part Studios independent. Revisit after parity if maintenance becomes painful.
+**Why no Derived feature (Option B):** Onshape's std `derivedPart()` is a FeatureScript-level op; the MCP doesn't expose it as a primitive and wiring it up from `write_featurescript_feature` would have been more complex than the 24-feature replay. The replay also keeps `shell_no_weapon` and `shell_with_weapon` independent — they share the Variable Studio but not feature topology.
+
+**v1 parity vs SCAD `shell_with_weapon.stl`:**
+- Volume: **+0.09%** (+115 mm³) — well within tessellation noise.
+- Y bbox: 145.50 mm vs SCAD's 145.36 mm — Onshape's exact value vs SCAD's chord-error under-approximation of the +Y face. Not a geometry issue.
+- X bbox: 138.00 mm matched. Z bbox: 33.00 mm matched.
+- Bonus: this Part Studio has **6** lid tap holes (4 perimeter at 0°/60°/120°/180° + 2 over the motor wall) vs `shell_no_weapon`'s **4** (E/W/mwL/mwR — NE and NW are silently coincident with E and W). Both are subject to the same DISTANCE-MINIMUM positional-snap issue (`hamachi-v5c` notes); I worked around it here by dropping the MINIMUM constraints on the perimeter taps and relying on seed coordinates. Updating `shell_no_weapon` the same way would recover the missing 2 holes — file when needed.
 
 ### `lid` (BUILT v1 — 11 features)
 
@@ -302,18 +310,38 @@ A second day of work tightened parametricity and surfaced new tool gotchas.
 - Element deletion (e.g., `hamachi-8jo` — delete the default empty `Part Studio 1`) — MCP only exposes `delete_document` (whole doc) and `delete_feature` (within an element). No `delete_element`.
 - Element rename — same story.
 
+## Lessons learned (v5c shell_with_weapon, 2026-05-26)
+
+A third day of work to build the shell_with_weapon Part Studio. One major new gotcha + one MCP gap to note.
+
+### v5c wins
+- **shell_with_weapon BUILT** via Option A (replay). 25 features. **Body volume parity vs SCAD STL: +0.09%** (within tessellation noise). The integrated weapon bar is parametric in #weaponWidth + #weaponThickness via two DISTANCE-MINIMUM constraints on opposite sides of the rectangle (works because they don't share the same anchor — see [[feedback-onshape-mcp-gotchas]]).
+- **arduinoShelf FS rebuilt fresh** for shell_with_weapon (`hamachi-uqc` closed). The original shell_no_weapon FS feature lives in a different Feature Studio element that the MCP can't cross-reference, so I wrote new FS source from the SCAD definition. The new source is archived to `docs/fs/arduino-shelf.fs` so it can be re-uploaded with parity if either Part Studio's Feature Studio gets rebuilt. Face origins in the resulting body match shell_no_weapon's shelf exactly (J2S=(36.0, 19.2, 16.9), J6S=(32.9, -16.2, 3.2)) — i.e. the rebuild reproduces the same geometry.
+- **Replay-from-cached-features workflow.** `get_features` returns a massive JSON blob (128KB single-line) that exceeds the MCP's response cap. Workaround: it's auto-saved to a tool-results file; `ast.literal_eval` parses it (Python repr, not JSON). Extracting `feature.name`, `feature.btType`, `feature.featureType`, and `feature.parameters[].expression` per feature gave a clean per-feature spec to replay — saves having to re-derive depths, oppositeDirection flags, and operation types from first principles.
+
+### New gotcha discovered (also captured in `feedback_onshape_mcp_gotchas` auto-memory)
+- **`DISTANCE direction=MINIMUM` with the same value on multiple radial entities silently collapses position even though endpoints don't share an anchor.** The `shell_lid_tap_holes` sketch in shell_no_weapon has 4 `DISTANCE-MINIMUM = (#botDiameter - #botShellThickness) / 2` constraints (one per perimeter tap: E/NE/NW/W) plus 2 H/V-pinned mw taps. I replicated this exact constraint set in shell_with_weapon and only 2 holes cut (the H/V-pinned mw taps; all 4 perimeter taps slipped to invalid positions and ended up cutting through air). Workaround: drop the MINIMUM constraints on the 4 perimeter taps and rely on seed coordinates. After the workaround, all 6 holes cut cleanly.
+  - **Implication for shell_no_weapon:** The same sketch in shell_no_weapon has only 4 holes (E, W, mwL, mwR) — NE and NW slip to coincident-with-E and coincident-with-W due to this same effect. SCAD `for([0:60:200])` specifies 4 perimeter angles (0°/60°/120°/180°); shell_no_weapon is dropping 2 of them. Same fix would recover them.
+  - **Refines the prior MINIMUM understanding.** The earlier gotcha (`hamachi-9qx` notes) said `DISTANCE direction=MINIMUM` (unsigned Euclidean) was safe for multiple entities at the same radial distance because they have different angles. That was an under-claim — the solver picks ONE branch and applies it to all entities that share the (anchor, value) pair, ignoring seed-position hints when there are 3+ ambiguous solutions to the same Euclidean-distance equation.
+
+### MCP gap: instantiating an existing FS custom feature in a new Part Studio
+- The arduinoShelf custom FS feature lives in a Feature Studio element (`e8745567717fd9a71f2816bbf::m15e3446d68c52690097e6faa`) created during the `shell_no_weapon` build (`hamachi-xy5`). To re-use it in `shell_with_weapon`, you'd want to instantiate a BTMFeature-134 referencing that namespace. **The MCP doesn't expose this primitive.** `write_featurescript_feature` always creates a NEW Feature Studio with new source.
+- **Workaround taken (`hamachi-uqc`):** re-upload the FS source via `write_featurescript_feature` (creates a parallel Feature Studio `661e2d122314a6cc0e1c2311`). Source archived to `docs/fs/arduino-shelf.fs` so it can be re-uploaded with parity, AND so the source isn't lost if the Onshape doc is rebuilt.
+- **Boolean gotcha during rebuild:** `opBoolean` with `tools: qEverything(EntityType.BODY)` failed with `BOOLEAN_INPUTS_NOT_SOLID` — `qEverything(EntityType.BODY)` picks up non-solid entities (sketch regions, surfaces from `opPlane`). Use `qAllNonMeshSolidBodies()` instead for "union everything that's actually solid." Two-shot fix; documented in `feedback_onshape_mcp_gotchas`.
+
 ## Onshape document IDs (for agent sessions)
 
 ```
-documentId       = 3662b787ba73917e77c5a543
-workspaceId      = 64e642b76ea639b57af58924
+documentId         = 3662b787ba73917e77c5a543
+workspaceId        = 64e642b76ea639b57af58924
 
-variables        (Variable Studio) = 8ad42fc0569446006c975dba
-lid              (Part Studio)     = 4184aeece3d6787270371115
-shell_no_weapon  (Part Studio)     = 9e9326c01379985fe1982ee6
-weapon           (Part Studio)     = 109b30fd7fdba9ecc8543a6e
-weapon_pin       (Part Studio)     = d8b341a8f7fcb9bbee7d33a3
-Part Studio 1    (empty default)   = 064c70496e243190d7179534    # to delete (hamachi-8jo)
+variables          (Variable Studio) = 8ad42fc0569446006c975dba
+lid                (Part Studio)     = 4184aeece3d6787270371115
+shell_no_weapon    (Part Studio)     = 9e9326c01379985fe1982ee6
+shell_with_weapon  (Part Studio)     = a28ec3540e926aba920d88b6
+weapon             (Part Studio)     = 109b30fd7fdba9ecc8543a6e
+weapon_pin         (Part Studio)     = d8b341a8f7fcb9bbee7d33a3
+Part Studio 1      (empty default)   = 064c70496e243190d7179534    # to delete (hamachi-8jo)
 ```
 
 These won't change unless the doc is recreated. Drop them straight into tool args to skip a `get_document` / `get_elements` lookup at the start of each session.
