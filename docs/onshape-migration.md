@@ -9,7 +9,7 @@ Migrate `antweight_reference_platform/spinbot_ant.scad` from OpenSCAD into Onsha
 > - `weapon` Part Studio **BUILT** (8 features). v2 polish landed: structural top bridge (`hamachi-6q9`), `weaponSlotExtraWidth=1mm` kerf widening (`hamachi-tff`). Onshape STL now matches upstream STL volume to within 0.11%. Z offset deferred (`hamachi-kaj`).
 > - `weapon_pin` Part Studio **BUILT** (2 features).
 > - `shell_with_weapon` Part Studio **BUILT v1** (25 features, `hamachi-v5c` closed). Option A replay: copied shell_no_weapon's tree minus the weapon-mount-hole, added a parametric weapon bar slab at the front, then re-implemented the arduinoShelf as a new FS feature (`hamachi-uqc` closed; FS source archived to `docs/fs/arduino-shelf.fs`). **Volume parity vs SCAD shell_with_weapon.stl: +0.09%** (+115 mm³ — tessellation noise). Bonus: 6 lid tap holes cut (vs shell_no_weapon's 4) thanks to dropping the DISTANCE-MINIMUM positional snap on perimeter taps.
-> - Lid chord-cut decision — open (`hamachi-5fc`); needs design call on whether to match SCAD's brutal cube cut or keep the structural rim crescent.
+> - Lid chord-cut decision — **resolved** (`hamachi-5fc` closed): keep the structural rim crescent. Documented as a deliberate divergence from SCAD in `spinbot_ant.scad` lid() module (lines ~215). Onshape lid retains the 5mm outer rim crescent for stiffness across the chord; SCAD's brutal cube-cut form is preserved in the frozen reference STL only.
 > - `Part Studio 1` cleanup — blocked on web UI (`hamachi-8jo`); MCP doesn't expose element-deletion.
 > - LED hole resize — waits on PLA fit-check (`hamachi-yac`).
 >
@@ -282,7 +282,7 @@ These will show up in any STL diff vs `antweight_reference_platform/*.stl`:
 - All screw pilots use 2.5 mm (M3) instead of SCAD's 2.2 mm (#2-28).
 - LED/power holes use 5 mm instead of SCAD's accidental 8 mm.
 - Weapon bar sits at z=0..38.5 instead of SCAD's z=-1.5..37 (`hamachi-kaj` deferred — accepting the Z offset).
-- Lid retains a 5 mm outer rim crescent below the wheel-well chord (`hamachi-5fc` open — design call on whether to match SCAD's brutal cube chord-cut).
+- Lid retains a 5 mm outer rim crescent below the wheel-well chord (`hamachi-5fc` resolved 2026-05-26: keep the rim for stiffness; the SCAD form is preserved in the frozen reference only). Documented as a deliberate divergence in `spinbot_ant.scad` near lines 215.
 
 Bounding box and mass agree within 1% after the v2 polish (weapon was -0.11% vs upstream STL post-`hamachi-tff`).
 

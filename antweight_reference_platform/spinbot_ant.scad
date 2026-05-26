@@ -208,10 +208,16 @@ module lid() {
             makeLedAndPowerHoles();
 
             wheelWellCut();
-            
+
                 translate ([0, motorMountOffset + ((motorMountLength - motorLength) / 2),floorThickness + (botHeight * -1) + lidMotorCutWidthAdjustment])
         motor();
-                
+
+            // NOTE (2026-05-26, hamachi-5fc): this cube chord-cut removes everything Y<-31
+            // including the outer 5mm rim crescent. The Onshape lid (Part Studio elementId
+            // 4184aeece3d6787270371115) deliberately diverges -- it uses an arc-bounded D-shape
+            // at the inner cylinder (radius 64) and retains the rim crescent for structural
+            // stiffness across the chord. Onshape is the source of truth for printed lids;
+            // this SCAD form is preserved for the frozen reference STL only.
             translate([botDiameter / -2,(motorWallOffset * -1) - motorWallThickness,0])
                 rotate ([90,0,0]) cube([botDiameter,botHeight,botDiameter]);
 
