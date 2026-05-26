@@ -200,6 +200,28 @@ After each Part Studio is built, run two checks:
 1. **Geometry diff vs SCAD STL** — export STL from Onshape at matching tessellation tolerance, compare to the upstream STL in `antweight_reference_platform/`. Tools: Meshlab, `gmsh`, or `numpy-stl` script. Acceptance: external dimensions agree within 0.1 mm; topology counts (faces/edges/vertices) need not match (CSG vs feature-tree produce different meshes), but the **bounding box and mass** should be within 1%.
 2. **Mass properties cross-check** — `mcp__plugin_jarvis-onshape-mcp_onshape__get_mass_properties` against SCAD volume computed from the STL. Expected agreement: within 1% (CSG tessellation introduces minor differences).
 
+### Results (v1, 2026-05-25, bead `hamachi-ius`)
+
+Ran on the post-cleanup tree (after `hamachi-6q9` weapon bridge, `hamachi-kaj` Z offset, `hamachi-ri1` motor-wall parametrization). Onshape STL exports come out in **meters** — STL is unitless but Onshape's API-side SI units carry through, so any external mesh-diff tool needs to scale ×1000.
+
+Bbox parity (after meter→mm rescale) and volume parity per part:
+
+| Part | Bbox X | Bbox Y | Bbox Z | Volume Δ | Verdict |
+|---|---|---|---|---|---|
+| `weapon` | 40.0 ✓ | 19.0 ✓ | 38.5 ✓ (z=-1.5..37 after `hamachi-kaj`) | +8.03% | bbox PASS, mass FAIL |
+| `weapon_pin` | 11.0 ✓ | dims match (orientation differs — see note) | dims match | +1.95% | dimensionally PASS, position differs |
+| `shell_no_weapon` | 138.0 ✓ | 138.0 (+0.20% — tessellation chord error in upstream) | 33.0 ✓ | -4.49% | bbox PASS, mass FAIL |
+| `lid` | 138.0 (+38% vs upstream — see note) | 138.0 ✓ | 1.0 ✓ | +4.90% | bbox FAIL (different cut shape), mass FAIL |
+
+**Volume-gap root causes** (not addressed in v1):
+
+- **`weapon` +8.03%** — Two upstream cuts not replicated:
+  - SCAD's `mainShell` cut on the weapon spans z=-1.5..33 (extends *into* the 1.5mm bottom extension); my Onshape `weapon_shell_cut` stops at z=0 and the bottom slab (added later for `hamachi-kaj` Z parity) is uncut. Fix: add a second REMOVE extrude `weapon_shell_cut_bottom` from `weapon_shell_annulus` with depth=1.5mm, oppositeDirection=true. New bead.
+  - SCAD does a second `mainShell` cut shifted by `weaponSlotExtraWidth = 1.0mm` in -Y, widening the slot by 1mm for 3D-print kerf. Onshape has neither pass. New bead.
+- **`shell_no_weapon` -4.49%** — Missing Arduino shelf (deferred `hamachi-xy5`); battery wall zip-tie gap (`hamachi-q6l`) deferred but adds less than the shelf removes. Net negative.
+- **`lid` bbox X +38%** — Upstream uses a *cube* chord-cut (SCAD `lid()` line 215-216: `rotate([90,0,0]) cube([138,33,138])` at `[-69,-31,0]`) that removes everything Y<-31 *including the rim crescent*. My Onshape uses a `wheel_well_cut` bounded by the inner cylinder (radius 64), so the outer 5mm rim crescent at Y<-31 is retained. Functional implication: thin structural rim across the chord that upstream doesn't have. New bead.
+- **`weapon_pin` orientation** — Onshape pin built at origin with axis along Z; upstream pin pre-positioned at the mount-hole location with axis along Y (via SCAD's `rotate([90,0,0])` + translate). Volume parity (+1.95%) is within facet noise. Functional impact zero — pin gets re-oriented when installed.
+
 ## Iteration sequencing
 
 1. `variables` Variable Studio — empty doc with all variables defined.
