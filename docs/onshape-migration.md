@@ -2,16 +2,18 @@
 
 Migrate `antweight_reference_platform/spinbot_ant.scad` from OpenSCAD into Onshape as a true parametric model.
 
-> **Status (2026-05-26):** v1 functionally complete for the detachable-weapon build.
-> - Variable Studio populated (33 base + 5 derived).
-> - `lid` Part Studio **BUILT** (11 features, volume within 0.4% of SCAD prediction).
-> - `shell_no_weapon` Part Studio **BUILT** (23 features incl. battery wall; volume within 0.03% of summed SCAD predictions).
-> - `weapon` Part Studio **BUILT** (6 features). Caveat: 2 disconnected bodies in v1, top connecting bridge missing — see bead `hamachi-6q9`.
+> **Status (2026-05-26, v2 polish session):** v1 functionally complete + most v2 polish landed. 11 beads closed across two days; `shell_with_weapon` and 3 deferred-or-blocked items remain.
+> - Variable Studio populated (34 base + 5 derived — added `#weaponBottomVerticalExtension`, `#weaponTopVerticalExtension`, `#weaponSlotExtraWidth`, `#batteryWallZipTieGap`).
+> - `lid` Part Studio **BUILT** (11 features). v2 polish landed: all 6 lid screw hole positions are now fully parametric (`hamachi-9qx`).
+> - `shell_no_weapon` Part Studio **BUILT** (25 features). v2 polish landed: motor wall parametric (`hamachi-ri1`), 3mm zip-tie gap below battery wall (`hamachi-q6l`), parametric lid tap positions (`hamachi-p4k`), Arduino shelf via FeatureScript custom feature (`hamachi-xy5`).
+> - `weapon` Part Studio **BUILT** (8 features). v2 polish landed: structural top bridge (`hamachi-6q9`), `weaponSlotExtraWidth=1mm` kerf widening (`hamachi-tff`). Onshape STL now matches upstream STL volume to within 0.11%. Z offset deferred (`hamachi-kaj`).
 > - `weapon_pin` Part Studio **BUILT** (2 features).
-> - `shell_with_weapon` — deferred (`hamachi-v5c`); detachable-weapon build via weapon+weapon_pin is the v1 path.
-> - Arduino shelf in shell — deferred (`hamachi-xy5`); SCAD's compound rotation needs FeatureScript or 3-point plane workaround.
+> - `shell_with_weapon` — still deferred (`hamachi-v5c`); the next big lift.
+> - Lid chord-cut decision — open (`hamachi-5fc`); needs design call on whether to match SCAD's brutal cube cut or keep the structural rim crescent.
+> - `Part Studio 1` cleanup — blocked on web UI (`hamachi-8jo`); MCP doesn't expose element-deletion.
+> - LED hole resize — waits on PLA fit-check (`hamachi-yac`).
 >
-> The "Lessons learned (v1)" section near the bottom captures what didn't survive contact with the CAD kernel. Open handoff items in `bd list` filtered by "hamachi-".
+> The "Lessons learned" section near the bottom captures every gotcha + workaround from both sessions. Open handoff items in `bd list` filtered by "hamachi-".
 
 ## Why migrate
 
@@ -243,9 +245,9 @@ Each of these becomes a follow-up task once v1 is done and parity is confirmed.
 
 ## Open questions
 
-- ~~Does the Onshape Variable Studio support derived expressions that reference other variables in the same studio?~~ **Partial answer (lid v1):** write-time accepted (`motorMountLength = #motorLength + 4 mm` and `botRadius = #botDiameter / 2` both stored). Base variables resolve at use-time in constraint VALUE fields (DIAMETER, RADIUS, DISTANCE) including inline arithmetic over multiple base vars, and in `variableDepth` on extrudes. The `variableRadius` arg on sketch circles failed with both base and derived vars (`SKETCH_DIMENSION_MISSING_PARAMETER`) — unclear whether that's a `variableRadius` bug or a derived-var resolution bug; constraint-first sketches with explicit DIAMETER constraint values are the proven path. Tracked in bead `hamachi-2cf`.
-- Is there a clean way to keep the bolt-circle position synced between `shell_no_weapon`, `shell_with_weapon`, and `lid` without resorting to cross-element Derived references? **Still open** — lid v1 used seed-only positions, so no cross-element coupling was needed yet. Will become a real question when v2 makes hole positions parametric (bead `hamachi-9qx`). Tracked in `hamachi-p4k`.
-- For `weapon_pin`, do we want the press-fit kerf as a separate variable from the shell-screw kerf? Tracked in `hamachi-p4k`.
+- ~~Does the Onshape Variable Studio support derived expressions that reference other variables in the same studio?~~ **Fully answered (`hamachi-2cf`, closed 2026-05-25):** Base `#var`s resolve everywhere — constraint VALUE fields (DIAMETER, RADIUS, DISTANCE), `variableDepth` on extrudes, inline arithmetic over multiple base vars. Derived `#var`s (`#botRadius`, `#motorWallWidth`, etc.) resolve ONLY as expression text at write-time in the Variable Studio itself; they FAIL in `variableRadius`/`variableDepth` args (`SKETCH_DIMENSION_MISSING_PARAMETER`) AND in constraint VALUE references (`SKETCH_UNSOLVABLE_CONSTRAINT` — misleading error, not the missing-parameter variant). `sqrt()` and `^` operators DO work in constraint expressions — paste the inline expression verbatim instead of referencing the derived var.
+- ~~Is there a clean way to keep the bolt-circle position synced between `shell_no_weapon` and `lid` without cross-element Derived references?~~ **Fully answered (`hamachi-p4k`, closed 2026-05-25):** Yes — shared Variable Studio refs + same parametric constraint formulas in both Part Studio sketches keep them in lockstep. No Derived references needed. Both `lid_screw_holes` and `shell_lid_tap_holes` now have matching parametric constraints (4 radial DISTANCE-MINIMUM + 2 pair-distance HORIZONTAL + 2 VERTICAL) referencing `#botDiameter`, `#botShellThickness`, `#motorWallOffset`, `#motorWallThickness`.
+- For `weapon_pin`, do we want the press-fit kerf as a separate variable from the shell-screw kerf? Still open.
 
 ## Lessons learned (v1)
 
@@ -271,9 +273,34 @@ Surfaced during the lid build; documenting here so the shell build doesn't re-bu
 These will show up in any STL diff vs `antweight_reference_platform/*.stl`:
 - All screw pilots use 2.5 mm (M3) instead of SCAD's 2.2 mm (#2-28).
 - LED/power holes use 5 mm instead of SCAD's accidental 8 mm.
-- Hole positions are seed-only (not parametric); position values still match SCAD numerically.
+- Weapon bar sits at z=0..38.5 instead of SCAD's z=-1.5..37 (`hamachi-kaj` deferred — accepting the Z offset).
+- Lid retains a 5 mm outer rim crescent below the wheel-well chord (`hamachi-5fc` open — design call on whether to match SCAD's brutal cube chord-cut).
 
-Bounding box and mass should still agree within 1% (the holes are tiny relative to total volume).
+Bounding box and mass agree within 1% after the v2 polish (weapon was -0.11% vs upstream STL post-`hamachi-tff`).
+
+## Lessons learned (v2 polish, 2026-05-25/26)
+
+A second day of work tightened parametricity and surfaced new tool gotchas.
+
+### v2 wins
+- **Weapon STL parity:** added `#weaponBottomVerticalExtension` (1mm), `#weaponTopVerticalExtension` (4mm), `#weaponSlotExtraWidth` (1mm) to the Variable Studio; weapon depths and the SCAD kerf-widening 2nd-pass cut are now driven by those vars. Volume within 0.11% of upstream STL (`hamachi-tff`).
+- **Battery wall zip-tie gap:** added `#batteryWallZipTieGap` (3mm) + a single REMOVE extrude on the existing wall sketch. Wall now floats at z=6..31, gap at z=3..6 (`hamachi-q6l`).
+- **Motor wall fully parametric:** replaced the hardcoded X=±59.144 with inline `(#botDiameter/2 - ...sqrt expression - #botShellThickness/2)` in the constraint VALUE; sqrt+^ work but `#derivedVar` references don't (`hamachi-ri1`, `hamachi-2cf`).
+- **Lid + shell tap holes parametric AND in sync:** matching 8-constraint set (origin point + 4 radial DISTANCE-MINIMUM + 2 pair-distance HORIZONTAL + 2 VERTICAL) on both `lid_screw_holes` and `shell_lid_tap_holes`. Shared Variable Studio refs keep them aligned without Derived references (`hamachi-9qx`, `hamachi-p4k`).
+- **Arduino shelf via FeatureScript custom feature:** the tilted shelf + strut from SCAD's `arduinoShelf()` modeled by a self-contained FS feature using `newSketchOnPlane` on a 3-point plane derived from the Rx·Rz rotation math, then `extrude(...)` (NOT `opExtrude`) and `opBoolean(UNION)` to merge into the shell body. First FS feature in the project; cookbook template at `~/.claude/plugins/cache/jarvis-onshape-mcp/.../fs-cookbook/helix.fs` was the working starting point (`hamachi-xy5`).
+
+### New gotchas discovered (also captured in the `feedback_onshape_mcp_gotchas` auto-memory)
+- **Derived `#var` refs fail in constraint VALUES** — masquerade as `SKETCH_UNSOLVABLE_CONSTRAINT` instead of the clearer `SKETCH_DIMENSION_MISSING_PARAMETER`. Workaround: paste the inline math expression.
+- **`create_extrude` `depth` arg rejects `#var` syntax** — use the separate `variableDepth` slot for base var names (no `#` prefix). `update_feature`'s `expression` field DOES accept inline `#var` arithmetic for the `depth` parameterId after the fact.
+- **DISTANCE-sign behavior is context-dependent.** Adding HORIZONTAL/VERTICAL DISTANCE via `edit_sketch` on an existing sketch with seeds locked in AND an explicit `origin` anchor point preserves the seed sign for single constraints. BUT: TWO DISTANCE constraints from the same anchor with the same value (e.g., `mw_L_x = mw_R_x = #botDiameter / 3`) silently collapse both entities to the same side; downstream cut features merge into one and you lose a hole. Workaround: use a pair-distance constraint BETWEEN the two entities (= `2 * single_offset`) plus an anchor on one of them.
+- **`inspect_sketch` returns SEED positions, not SOLVED positions.** Cannot confirm a fix worked by reading sketch state — must `list_entities` the resulting body and count.
+- **`forceOppositeDirection=false` on `create_extrude`** to override the REMOVE-on-face auto-flip. The auto-flip's heuristic ("cut INTO the face's body") is wrong when the cut should go INTO a feature sitting ON TOP of the sketch face (validated by `hamachi-q6l`).
+- **Inside FS custom features, prefer the user-facing `extrude(...)` wrapper over the lower-level `opExtrude(...)`.** Same inputs; `opExtrude` failed with opaque `EXTRUDE_FAILED` (no FS notice) while `extrude` succeeded. Default to the wrapper for sketched solids inside FS (validated by `hamachi-xy5`).
+- **Onshape STL exports come out in METERS, not mm.** Bare numbers in the STL are scaled 1/1000 vs the doc's mm units. External mesh-diff tooling needs to scale ×1000 to compare to mm-native STLs from OpenSCAD.
+
+### No-MCP gaps (require user action in the Onshape web UI)
+- Element deletion (e.g., `hamachi-8jo` — delete the default empty `Part Studio 1`) — MCP only exposes `delete_document` (whole doc) and `delete_feature` (within an element). No `delete_element`.
+- Element rename — same story.
 
 ## Onshape document IDs (for agent sessions)
 
