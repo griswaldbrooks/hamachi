@@ -54,6 +54,33 @@ Tethered bench session over USB (battery + motors not yet wired). All checks via
   `BINARY_THROTTLE` already shapes throttle at the spin level.
 - **Still open:** failsafe end-to-end test (see Radio configuration below); reflash **competition** firmware (currently the diagnostic build is on the board) before the event.
 
+## 2026-05-31 (evening) — Micro Center sourcing run
+
+Motor-switch path now fully sourced (DigiKey treated as won't-arrive). Single-motor build → 1 FET + 1 clamp in-circuit.
+
+**Acquired:**
+- **Backup MOSFET — RFP30N06LE** (TO-220, N-ch, 60 V / 30 A). Genuine logic-level ("LE" = logic-enhanced),
+  Rds(on) ~0.047 Ω at Vgs = 5 V — fully on off the 32u4's 5 V gate. Pinout (label facing you, L→R):
+  **Gate – Drain – Source** (same as IRLZ44N; drops into the low-side wiring). Notably this is the
+  *upstream-original* openmelt2 FET the BOM had marked discontinued. Backup to the IRLB8721 (Amazon, primary).
+- **Back-EMF clamp — KBPC2502 bridge rectifier** (25 A / 200 V). Using **one** of its four diodes as the low-side
+  freewheel clamp: **AC (~) → FET drain / switched node**, **"+" → battery positive / motor high side** (anode at
+  switched node, cathode at +V — verified correct low-side orientation). Other AC + "−" left unconnected. 25 A ≫ a
+  540's freewheel current; slow recovery is irrelevant at melty switching rates (tens of Hz). ⚠️ Heavy chassis-mount
+  block — fine for bench/backup, but prefer a lighter dedicated Schottky (DigiKey 30SQ045 or a Prime part) for the
+  final antweight build.
+- **Passives:** 4700 µF / ≥16 V electrolytic ×2 (bus cap), 100 Ω (LED), 10 kΩ + 100 kΩ (battery divider), 5 mm LED
+  (heading), 10 kΩ (FET gate→source pulldown).
+
+**Rejected:**
+- 5.1 V / 5 W Zener — wrong device; clamps reverse at 5.1 V (below the 7.4 V pack) so it'd conduct backward across the
+  motor. Not a flyback diode.
+- 6 A / 600 V axial rectifier — would work but 6 A is under the ≥10 A target (leans on surge rating), and $34.99 was a
+  ripoff. Chose the KBPC2502 instead.
+
+**Motor-switch path complete:** IRLB8721 (primary) / RFP30N06LE (backup) low-side FET + KBPC2502 single-diode
+freewheel + 10 kΩ gate pulldown. VNH5019 remains on hand as a full integrated-flyback alternate.
+
 ## Prints
 
 ### PLA fit-check

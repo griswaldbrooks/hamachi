@@ -37,9 +37,13 @@ drivetrain is **single-motor**, so only **1 FET + 1 Schottky** are needed in-cir
 - **Primary motor FET:** Infineon **IRLB8721PBF** (logic-level) — ordered Amazon Prime.
 - **Micro Center same-day** for passives + a backup FET:
   - Bus cap ~4700 µF / ≥16 V (×2) · 100 Ω + 10 kΩ + 100 kΩ resistors · bright 5 mm LED
-  - Backup logic-level FET: **IRLZ44N only** (Rds rated at Vgs ≤ 5 V). **Do NOT buy IRFZ44N or the NTE2389-class
-    60 V/38 A 2-pack — standard-gate, won't fully turn on at the 5 V ItsyBitsy gate → overheats.**
-  - Schottky **≥40 V / ≥10–20 A** (MBR2045CT / SB2040); Micro Center stock is iffy — Prime one if absent. Avoid 1–3 A 1N58xx.
+  - Backup logic-level FET: **acquired RFP30N06LE** (TO-220, logic-level "LE", Rds(on) ~0.047 Ω at Vgs = 5 V; the
+    *upstream-original* openmelt2 FET, G-D-S pinout). IRLZ44N would also work. **Do NOT use IRFZ44N or the
+    NTE2389-class 60 V/38 A 2-pack — standard-gate, won't fully turn on at the 5 V ItsyBitsy gate → overheats.**
+  - Back-EMF clamp: **acquired KBPC2502** bridge rectifier (25 A / 200 V), using one diode as the low-side freewheel
+    (AC → FET drain / switched node, "+" → battery positive). Works, but it's a heavy chassis-mount block — prefer a
+    lighter dedicated Schottky (≥40 V / ≥10–20 A, e.g. MBR2045CT, or the DigiKey 30SQ045 if it lands) for the final
+    antweight build. Avoid 1–3 A 1N58xx.
   - Optional: 10 kΩ FET gate→source pulldown (keeps the motor FET off during MCU boot/reset).
 - **Backup driver on hand:** Pololu VNH5019 carrier — with single-motor confirmed it's a complete drive backup
   (binary mode: INA=H, INB=L, EN=H, D9→PWM; zero firmware change). Heavier/bulkier than the TO-220, so backup only.
