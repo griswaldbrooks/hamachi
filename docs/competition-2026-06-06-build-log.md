@@ -40,6 +40,18 @@ Tethered bench session over USB (battery + motors not yet wired). All checks via
   spring-centers to ~1507 µs → read 43% at the upstream 1250 µs idle point (won't arm; idle-spins). Radio SUB TR / TH
   Trim capped at ~1380 µs (~22%), couldn't reach 0%. Fixed in firmware: `IDLE_THROTTLE_PULSE_LENGTH` **1250 → 1550**.
   Verified: released trigger → 0% (16/16), full squeeze → 100% (16/16). **Breaks the AGENTS.md firmware freeze, intentionally.**
+- **Drivetrain — single-motor confirmed** (builder, 2026-05-31): reference design uses **one** drive motor on
+  **D9**; the firmware's D10 phase-2 signal is generated but left unconnected. BOM's Qty-2 motors = primary + spare,
+  not a two-motor drivetrain. → Power electronics need only **1 FET + 1 Schottky in-circuit** (BOM's Qty-4 are spares).
+- **Power-electronics sourcing (DigiKey delayed):** DigiKey order (MOSFETs / Schottky / bus cap / resistors / LED)
+  showed "EOD 5/31" but FedEx had not scanned it out of NJ — treating it as **won't make 6/6** (not cancelled; bonus
+  if it lands). Ordered **IRLB8721PBF** (logic-level N-FET) via Amazon Prime as the primary motor switch. Micro Center
+  run for passives + a backup logic-level FET. **Watch out:** need a true *logic-level* FET (Rds rated at Vgs ≤5 V) —
+  IRLZ44N OK, **IRFZ44N / NTE2389 are standard-gate, do NOT use** at the 5 V ItsyBitsy gate.
+- **VNH5019 carrier (on hand):** with single-motor confirmed, this is now a **complete** drive backup (not half). Can
+  bench-test motor drive today in binary mode (INA=H, INB=L, EN=H, **D9 → PWM**) with **zero firmware change**. Not the
+  long-term pick (heavier/bulkier than a TO-220); IRLB8721 preferred. Its variable/EN-PWM mode is unneeded —
+  `BINARY_THROTTLE` already shapes throttle at the spin level.
 - **Still open:** failsafe end-to-end test (see Radio configuration below); reflash **competition** firmware (currently the diagnostic build is on the board) before the event.
 
 ## Prints

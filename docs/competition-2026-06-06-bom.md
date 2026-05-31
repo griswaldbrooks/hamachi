@@ -29,6 +29,21 @@ rationale and on-hand inventory are at the bottom.
 
 **Subtotal:** $23.21 in parts; **$35.76 with tariff + shipping + tax**.
 
+### Micro Center emergency-sourcing fallback (2026-05-31)
+
+Digi-Key shipment stalled (label created, not scanned out of NJ) — treated as won't-make-6/6 (not cancelled). The
+drivetrain is **single-motor**, so only **1 FET + 1 Schottky** are needed in-circuit (the Qty-4 above are spares).
+
+- **Primary motor FET:** Infineon **IRLB8721PBF** (logic-level) — ordered Amazon Prime.
+- **Micro Center same-day** for passives + a backup FET:
+  - Bus cap ~4700 µF / ≥16 V (×2) · 100 Ω + 10 kΩ + 100 kΩ resistors · bright 5 mm LED
+  - Backup logic-level FET: **IRLZ44N only** (Rds rated at Vgs ≤ 5 V). **Do NOT buy IRFZ44N or the NTE2389-class
+    60 V/38 A 2-pack — standard-gate, won't fully turn on at the 5 V ItsyBitsy gate → overheats.**
+  - Schottky **≥40 V / ≥10–20 A** (MBR2045CT / SB2040); Micro Center stock is iffy — Prime one if absent. Avoid 1–3 A 1N58xx.
+  - Optional: 10 kΩ FET gate→source pulldown (keeps the motor FET off during MCU boot/reset).
+- **Backup driver on hand:** Pololu VNH5019 carrier — with single-motor confirmed it's a complete drive backup
+  (binary mode: INA=H, INB=L, EN=H, D9→PWM; zero firmware change). Heavier/bulkier than the TO-220, so backup only.
+
 ## Amazon
 
 | Role | Amazon ASIN | Mfg / Description | Qty | Unit | Total | Notes |
