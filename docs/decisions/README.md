@@ -10,6 +10,7 @@ and the context around it.
 - [ADR-0003 — Compete underweight in 1kg class for 2026-06-06](./0003-compete-underweight-in-1kg-class.md)
 - [ADR-0004 — Print structural parts in PPA-CF on Bambu X1C](./0004-use-ppa-cf-print-material.md)
 - [ADR-0005 — Use MEUS RACING ME-8B as the radio](./0005-select-meus-me-8b-radio.md)
+- [ADR-0006 — Move throttle neutral to the pistol trigger's spring-center](./0006-throttle-neutral-at-trigger-center.md)
 
 ## Conventions
 

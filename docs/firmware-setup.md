@@ -119,6 +119,11 @@ Uncomment to disable all motor control and just print accel + RC + battery info 
 
 The IRLB3813 MOSFET drives in the BOM use `BINARY_THROTTLE`. If you swap in a brushless ESC, switch to `FIXED_PWM_THROTTLE` or `DYNAMIC_PWM_THROTTLE`.
 
+> **Throttle neutral (pistol-grip radio):** `IDLE_THROTTLE_PULSE_LENGTH` in `rc_handler.h` is **1550 µs**, not the
+> upstream 1250 µs. The MEUS pistol trigger spring-centers to ~1507 µs, so the higher idle threshold makes a
+> *released* trigger read 0%. See [ADR-0006](./decisions/0006-throttle-neutral-at-trigger-center.md). If you use a
+> non-centering throttle control (a knob/slider that rests low), revert toward 1250.
+
 ### Translational drift
 
 ```c

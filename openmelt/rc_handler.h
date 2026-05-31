@@ -31,7 +31,7 @@ bool rc_get_is_lr_in_normal_deadzone();
 //(does not need to be perfect)
 #define NOMINAL_PULSE_RANGE (MAX_RC_PULSE_LENGTH - MIN_RC_PULSE_LENGTH)
 
-#define IDLE_THROTTLE_PULSE_LENGTH 1250           //pulses below this value are considered 0% throttle
+#define IDLE_THROTTLE_PULSE_LENGTH 1550           //pulses below this value are considered 0% throttle (MEUS ME-8B pistol trigger springs to ~1507us; threshold sits above the resting jitter band so a released trigger reliably = 0%)
 #define FULL_THROTTLE_PULSE_LENGTH 1850           //pulses above this value are considered 100%
 #define CENTER_LEFTRIGHT_PULSE_LENGTH 1500        //center value for left / right
 #define CENTER_FORBACK_PULSE_LENGTH 1500          //center value for for / back
