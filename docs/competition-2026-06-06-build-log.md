@@ -81,6 +81,31 @@ Motor-switch path now fully sourced (DigiKey treated as won't-arrive). Single-mo
 **Motor-switch path complete:** IRLB8721 (primary) / RFP30N06LE (backup) low-side FET + KBPC2502 single-diode
 freewheel + 10 kΩ gate pulldown. VNH5019 remains on hand as a full integrated-flyback alternate.
 
+## 2026-06-06 (morning) — full-assembly bench verification (comp day)
+
+Fully soldered robot, motor clamped, diagnostic build still on board, serial @115200 (`/dev/ttyACM2`,
+enumerates as Leonardo). All checks pass; bot is electrically comp-ready pending RX-power repair + reflash.
+
+- **Battery monitor: ✅ verified.** 10k/100k divider on A0 reads **8.23–8.28 V** vs 8.3 V at the pack by
+  multimeter — `VOLTAGE_DIVIDER 11` is correct as-is, no calibration needed.
+  - Gotcha: with the pack *disconnected*, A0 reads a plausible-looking **4.89 V** (node backfed from the USB 5 V
+    rail through the divider) — don't trust the battery field unless the pack is actually plugged in.
+- **RC end-to-end (post-soldering): ✅.** Health 1; released trigger = **0% sustained** (ADR-0006 idle fix holds
+  on assembled bot); L/R neutral ±20 jitter; F/B 3-pos neutral = 0.
+- **Failsafe: ✅ VERIFIED end-to-end** — but not the way the test plan above expected:
+  - The RX **keeps emitting pulses on TX loss** (preset failsafe output), so **`RC Health` stays 1** — the
+    firmware *cannot* detect TX-off. The `Health → 0` expectation in the Radio configuration section is wrong
+    for this RX.
+  - The test that matters: **trigger held high, TX killed → throttle drops to 0** (RX failsafe commands
+    throttle-low, does NOT hold last value). Confirmed by builder. This is the behavior tournament failsafe
+    inspection checks.
+- **RX external (pack-side) power input: ❌ dead — repair in progress** (builder). RX currently runs off the
+  ItsyBitsy 5 V rail; it worked all session on USB power. Repair before comp: in a match there is no USB.
+  - Symptom note: the RX power LED is **dark until it links with the TX** — a dark LED does not mean unpowered.
+- **Still open before comp:** RX power repair → **reflash competition firmware** (tree is already in comp
+  config — `JUST_DO_DIAGNOSTIC_LOOP` commented out, IDLE 1550 in) → battery-only smoke test (no USB) to prove
+  the bot runs untethered.
+
 ## Prints
 
 ### PLA fit-check
@@ -136,8 +161,9 @@ freewheel + 10 kΩ gate pulldown. VNH5019 remains on hand as a full integrated-f
 - Serial Monitor (115200 baud) output captured: ✅ 2026-05-31 — `JUST_DO_DIAGNOSTIC_LOOP` streams at ~4 Hz.
 - RC channel values via diagnostic loop: ✅ all three channels mapped + verified (see 2026-05-31 session entry).
 - Accel reading at rest: ✅ live (jittering), uncalibrated ~−4.9 g raw; `Zero G Offset` 0.00 (calibrate post-assembly).
-- Battery voltage reading: A0 floating (no divider wired) → reads garbage (~12–15 V). Re-check after the 10k/100k
-  divider is in place — expect ~0 with battery disconnected.
+- Battery voltage reading: A0 floating (no divider wired) → reads garbage (~12–15 V). ✅ 2026-06-06: divider in
+  place reads 8.23–8.28 V vs 8.3 V at the pack — `VOLTAGE_DIVIDER 11` correct. (Pack disconnected it reads ~4.89 V
+  — USB backfeed through the divider, not ~0 as predicted.)
 
 ## Radio configuration (MEUS ME-10B)
 
@@ -149,9 +175,10 @@ anticipated. Channel map verified 2026-05-31 (see session entry above).
   - Trigger → CH2 → **D0 / Throttle** ✅ (neutral handled in firmware per ADR-0006, not radio trim)
   - Wheel → CH1 → **D7 / L/R** ✅ (proportional, ±~500 µs)
   - 3-position switch → CH4 → **D1 / F/B** ✅ (−1 / 0 / +1; CH3 was 2-state, no neutral — avoid)
-- Failsafe: CH2 (throttle) failsafe value set to low on the radio (2026-05-31). **End-to-end test still pending:**
-  power on, wait ≥60 s (TX pushes failsafe config once/min per manual), kill TX, confirm over serial that
-  `Health → 0` AND `Throttle → 0` within ~1 s. Re-verify before every test session (`hamachi-0xx`).
+- Failsafe: CH2 (throttle) failsafe value set to low on the radio (2026-05-31). **End-to-end test: ✅ 2026-06-06.**
+  Held trigger high, killed TX → throttle dropped to 0 over serial. ⚠️ Note: RX keeps emitting failsafe pulses on
+  TX loss, so `RC Health` **stays 1** — the original `Health → 0` expectation was wrong for this RX; throttle-drop
+  is the criterion. Re-verify before every test session (`hamachi-0xx`).
 
 ## Tuning sessions
 
